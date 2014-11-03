@@ -1,0 +1,99 @@
+---
+title: "Reporte de SFA"
+author: "Arturo Chian"
+date: "Saturday, November 01, 2014"
+output: html_document
+---
+
+***Nota: El patrimonio se encuentra en miles de soles.***
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+library(devtools)
+#install_github("financeR", user="rhochreiter")
+library(financeR)
+library(lubridate)
+library(dplyr)
+library(rCharts)
+library(reshape2)
+library(dygraphs)
+setwd("C:/Users/Arturo Chian/Documents/smv/SAF/ScotiaFondos/accionesS")
+a<-read.csv("data.csv") 
+a$Fecha<-dmy(a$Fecha) #a$Fecha
+a$Fecha<-as.character(a$Fecha);
+a$Patrimonio<-as.numeric(as.numeric(gsub(",","", a$Patrimonio)))
+a$Nº.Partícipes<-as.numeric(as.numeric(gsub(",","", a$Nº.Partícipes)))
+a$Nº.de.Cuotas<-as.numeric(as.numeric(gsub(",","", a$Nº.de.Cuotas)))
+#options(scipen=100, digits=22)
+a<-plyr::rename(a, c("Nº.Partícipes"="N.Participes", 
+            "Nº.de.Cuotas"="N.cuotas"))
+  
+a3 <- as.zoo(a)
+A4<-xts(a[,-1],order.by=as.POSIXct(a$Fecha))
+A4$Patrimonio<-A4$Patrimonio/1000
+A4$N.cuotas<-A4$N.cuotas/1000
+A4$Rdia <- diff(log(A4$Valor.Cuota), lag = 1)
+# A4$R360log <- diff(log(A4$Valor.Cuota), lag = 360)*100
+# A4$R365 <- diff(A4$Valor.Cuota, lag = 365)
+# A4$R365<- A4$R365 /  A4$Valor.Cuota*100
+
+
+
+dygraph(A4[,c(1:2)],group = "fondo") %>% dyRangeSelector() %>% 
+  dySeries(label = "Valor Cuota") %>%
+  dyShading(from = "2008-1-1", to = "2009-10-1", color = "#FFE6E6")%>%
+  dySeries("Patrimonio", axis = 'y2') %>%
+  dyAxis("y", label = "Cuota") %>%
+  dyAxis("y2", label = "Patrimonio en Miles de Soles", independentTicks = TRUE)
+```
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+dygraph(A4[,c(1,3)],group = "fondo") %>% dyRangeSelector() %>% 
+  dySeries(label = "Valor Cuota") %>%
+  dyShading(from = "2008-1-1", to = "2009-10-1", color = "#FFE6E6")%>%
+  dySeries("N.Participes", axis = 'y2') 
+```
+
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+dygraph(A4[,c(1,4)],group = "fondo") %>% dyRangeSelector() %>% 
+  dySeries(label = "Valor Cuota") %>%
+  dyShading(from = "2008-1-1", to = "2009-10-1", color = "#FFE6E6")%>%
+  dySeries("N.cuotas", axis = 'y2') 
+```
+
+## Variabilidad diaria
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+dygraph(A4$Rdia)%>% dyRangeSelector()
+```
+
+## Rentabilidad Anual
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+dygraph(A4$Rentabilidad.Anual)%>% dyRangeSelector()
+```
+
+## Rentabilidad Acumulada
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+dygraph(A4$Rentabilidad.Acumulada)%>% dyRangeSelector()
+```
+
+```{r,echo=FALSE,comment=F,message=FALSE}
+# statNames <- c("mean", "std dev", "skewness", "kurtosis")
+# stats <- c(mean(A4$Rdia,na.rm = F), sd(A4$Rdia,na.rm = F),
+#            skewness(A4$Rdia,na.rm = F), kurtosis(A4$Rdia,na.rm = F))
+# ??skewness
+# install.packages("moments")
+# library(moments)
+# all.moments( A4$Rdia, central=TRUE, order.max=4 ,na.rm = T)
+# mean(A4$Rdia)
+# mean(A4$Rdia,na.rm = T)
+# median(A4$Rdia,na.rm = T)
+# 
+# mean(A4$Rdia)
+# A4$Rdia
+# names(SPY.stats) <- statNames
+# SPY.stats
+```
+
